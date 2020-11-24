@@ -192,7 +192,7 @@ void list_add_ascending_by_blocksize(list_t *l, block_t *newblk)
   node_t *current;
   node_t *prev;
 
-  int new_blk_size = newNode->blk->end - newNode->blk->start;
+  int new_blk_size = newblk->end - newblk->start;
   int current_blk_size;
 
   if (l->head == NULL)
@@ -206,7 +206,7 @@ void list_add_ascending_by_blocksize(list_t *l, block_t *newblk)
 
     if (current->next == NULL)
     {
-      if (new_blk_size >= current_blk_size)
+      if (new_blk_size < current_blk_size)
       { //size of the new block is grater than the current block
         newNode->next = l->head;
         l->head = newNode;
@@ -219,14 +219,14 @@ void list_add_ascending_by_blocksize(list_t *l, block_t *newblk)
     }
     else
     {
-      if (new_blk_size >= current_blk_size)
+      if (new_blk_size < current_blk_size)
       {
         newNode->next = l->head;
-        current = current->next;
+        l->head = newNode;
       }
       else
       {
-        while (current != NULL && new_blk_size <= current_blk_size)
+        while (current != NULL && new_blk_size >= current_blk_size)
         { //find block that is larger than the current block size and insert it in the list
           prev = current;
           current = current->next;
@@ -245,9 +245,10 @@ void list_add_ascending_by_blocksize(list_t *l, block_t *newblk)
 
 void list_add_descending_by_blocksize(list_t *l, block_t *blk)
 {
+    node_t *newNode = node_alloc(blk);
+
   node_t *current;
   node_t *prev;
-  node_t *newNode = node_alloc(blk);
   int newblk_size = blk->end - blk->start;
   int curblk_size;
 
@@ -317,14 +318,15 @@ void list_coalese_nodes(list_t *l)
    * USE the compareSize()
    */
 
-  node_t *current = l->head->next;
-  node_t *prev = l->head;
+
 
   if (l->head == NULL || l->head->next == NULL)
   {
     return;
   }
 
+  node_t *current = l->head->next;
+  node_t *prev = l->head;
   while (current != NULL)
   { //list is not empty
     if (prev->blk->end + 1 == current->blk->start)
@@ -333,7 +335,7 @@ void list_coalese_nodes(list_t *l)
       prev->next = current->next;         //point the prev.NEXT to the current.NEXT
       free(current->blk);
       free(current); //Free current
-      current = prev->next;
+      current = prev;
     }
     else
     { //Advance prev = current, and current = current.NEXT
